@@ -1,23 +1,27 @@
-Control Spotify without leaving bb.
+Control your music without leaving bb.
 
 ## What you get
 
-- A **Spotify** button in the sidebar footer. It opens a small player with
-  the track, artwork, a seek bar, play and pause, previous and next, shuffle,
-  repeat, and volume.
-- A `bb spotify` command that does the same from a terminal or an agent.
+- A **Now Playing** button in the sidebar footer. It opens a small player
+  with the track, album art, a seek bar, play and pause, previous and next,
+  shuffle, repeat, and volume.
+- Support for Spotify and Apple Music. By default the player follows the app
+  that is playing. A setting can lock it to one app.
+- A `bb music` command that does the same from a terminal or an agent.
 
 ## How it works
 
-The plugin drives the Spotify desktop app on the Mac that runs the bb server.
-It uses macOS Automation, so it needs no Spotify account link, API key, or
-network call. The first time it runs, macOS asks if bb can control Spotify.
+The plugin drives the music app on the Mac that runs the bb server. It uses
+macOS Automation, so it needs no account link, API key, or network call.
+Apple Music album art stays on the Mac. The first time the plugin controls
+an app, macOS asks if bb can control it.
 
-The player works from any bb client, including a phone, but it always
-controls the server's Mac.
+The player works from any bb client, but it always controls the server's
+Mac.
 
 ## Limits
 
-- The bb server must run on macOS with the Spotify app installed.
-- The plugin cannot search for music or start a playlist. Pick music in
-  Spotify.
+- The bb server must run on macOS. Spotify needs its desktop app.
+- The plugin cannot search for music or start a playlist. Pick music in the
+  app.
+- Spotify has no "repeat one" mode, so repeat turns on or off there.

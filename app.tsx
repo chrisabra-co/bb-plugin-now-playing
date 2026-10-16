@@ -1,15 +1,28 @@
-// bb-plugin-spotify — a small Spotify player in the sidebar footer.
+// bb-plugin-now-playing — a small Spotify or Apple Music player in the
+// sidebar footer.
 //
 // Compiled by `bb plugin build` into dist/app.js + dist/app.css. React and
 // @get-bb/plugin-sdk/app come from the BB app at load time.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { definePluginApp, useRealtime, useRpc } from "@get-bb/plugin-sdk/app";
-import type { Control, Player, rpcContract } from "./server";
+import type {
+  Control,
+  MusicApp,
+  Player,
+  RepeatMode,
+  Track,
+  rpcContract,
+} from "./server";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const POLL_MS = 1000;
+
+const APP_NAMES: Record<MusicApp, string> = {
+  spotify: "Spotify",
+  music: "Apple Music",
+};
 
 /** Polls the player while the panel is open and the page is visible. */
 function usePlayer() {
@@ -240,12 +253,38 @@ function Notice({ children, action }: { children: ReactNode; action?: ReactNode 
   );
 }
 
-function Artwork({ url }: { url: string }) {
+/** Spotify artwork is a URL. Music artwork loads once per track over RPC. */
+function useArtworkUrl(artwork: Track["artwork"]): string | null {
+  const rpc = useRpc<typeof rpcContract>();
+  const key = artwork?.kind === "embedded" ? artwork.key : null;
+  const [embedded, setEmbedded] = useState<{ key: string; url: string | null } | null>(null);
+  useEffect(() => {
+    if (key === null) return;
+    let cancelled = false;
+    rpc.call("player_artwork", { key }).then(
+      ({ dataUrl }) => {
+        if (!cancelled) setEmbedded({ key, url: dataUrl });
+      },
+      () => {
+        if (!cancelled) setEmbedded({ key, url: null });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [rpc, key]);
+  if (artwork === null) return null;
+  if (artwork.kind === "url") return artwork.url;
+  return embedded?.key === artwork.key ? embedded.url : null;
+}
+
+function Artwork({ artwork }: { artwork: Track["artwork"] }) {
+  const url = useArtworkUrl(artwork);
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [url]);
   return (
     <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
-      {url !== "" && !failed ? (
+      {url !== null && url !== "" && !failed ? (
         <img
           src={url}
           alt=""
@@ -259,6 +298,12 @@ function Artwork({ url }: { url: string }) {
   );
 }
 
+const REPEAT_LABELS: Record<RepeatMode, string> = {
+  off: "Repeat is off",
+  all: "Repeating all",
+  one: "Repeating one track",
+};
+
 function PlayerView({
   player,
   send,
@@ -266,10 +311,13 @@ function PlayerView({
   player: Extract<Player, { status: "ready" }>;
   send: (control: Control) => void;
 }) {
-  const { track, state, positionSec, volume, shuffling, repeating } = player;
+  const { app, track, state, positionSec, volume, shuffling, repeat, repeatModes } =
+    player;
   const playing = state === "playing";
+  const nextRepeat =
+    repeatModes[(repeatModes.indexOf(repeat) + 1) % repeatModes.length] ?? "off";
 
-  // Spotify applies volume at once, so send it while dragging, at most
+  // The app applies volume at once, so send it while dragging, at most
   // every 150 ms, and always send the final value.
   const volumeTimer = useRef<number | null>(null);
   const pendingVolume = useRef<number | null>(null);
@@ -292,13 +340,16 @@ function PlayerView({
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2.5">
-        <Artwork url={track?.artworkUrl ?? ""} />
+        <Artwork artwork={track?.artwork ?? null} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">
             {track?.name ?? "Nothing playing"}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {track === null ? "Pick something in Spotify" : track.artist}
+            {track === null ? `Pick something in ${APP_NAMES[app]}` : track.artist}
+          </p>
+          <p className="truncate text-[10px] text-muted-foreground/70">
+            {APP_NAMES[app]}
           </p>
         </div>
       </div>
@@ -339,11 +390,17 @@ function PlayerView({
           <NextGlyph />
         </ControlButton>
         <ControlButton
-          label={repeating ? "Turn repeat off" : "Turn repeat on"}
-          active={repeating}
-          onClick={() => send({ action: "repeat", on: !repeating })}
+          label={`${REPEAT_LABELS[repeat]}. Change repeat.`}
+          active={repeat !== "off"}
+          onClick={() => send({ action: "repeat", mode: nextRepeat })}
+          className="relative"
         >
           <RepeatGlyph />
+          {repeat === "one" ? (
+            <span className="absolute right-1 top-1 text-[8px] font-semibold leading-none">
+              1
+            </span>
+          ) : null}
         </ControlButton>
       </div>
 
@@ -365,26 +422,28 @@ function PlayerView({
   );
 }
 
-function SpotifyPanel() {
+function NowPlayingPanel() {
   const { player, error, send } = usePlayer();
   let body: ReactNode;
   if (player === null) {
-    body = error === null ? <Notice>Connecting to Spotify…</Notice> : null;
+    body = error === null ? <Notice>Connecting…</Notice> : null;
   } else if (player.status === "unsupported") {
-    body = <Notice>Spotify control needs a bb server on macOS.</Notice>;
+    body = <Notice>Now Playing needs a bb server on macOS.</Notice>;
   } else if (player.status === "not-installed") {
-    body = <Notice>Spotify is not installed on the bb server's Mac.</Notice>;
+    body = (
+      <Notice>{APP_NAMES[player.app]} is not installed on the bb server's Mac.</Notice>
+    );
   } else if (player.status === "not-running") {
     body = (
       <Notice
         action={
           <Button size="sm" onClick={() => send({ action: "play" })}>
             <PlayGlyph />
-            Open and play
+            Open {APP_NAMES[player.launchApp]}
           </Button>
         }
       >
-        Spotify is not running.
+        No music app is running.
       </Notice>
     );
   } else {
@@ -406,8 +465,8 @@ export default definePluginApp((app) => {
   app.experimental_sidebarFooter.register({
     kind: "disclosure",
     id: "player",
-    label: "Spotify",
-    icon: "spotify/music",
-    component: SpotifyPanel,
+    label: "Now Playing",
+    icon: "now-playing/music",
+    component: NowPlayingPanel,
   });
 });
