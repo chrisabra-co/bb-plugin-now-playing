@@ -37,6 +37,8 @@ Add `--json` to any command when the output drives code.
 - Change playback only when the user asks for it. Music plays out loud.
 - Change the `app` setting only when the user asks for it.
 - Run `bb music status` to answer "what is playing". Do not guess.
+- Apple Music streamed tracks have no album art in the panel. That is a
+  Music limit, not an error.
 - The plugin cannot search for music or start a playlist. Tell the user to
   choose it in the app.
 - An error that names "Automation" means macOS blocked bb. Tell the user to
