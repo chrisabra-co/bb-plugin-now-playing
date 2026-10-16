@@ -12,9 +12,13 @@ Control your music without leaving bb.
 ## How it works
 
 The plugin drives the music app on the Mac that runs the bb server. It uses
-macOS Automation, so it needs no account link, API key, or network call.
-The first time the plugin controls
-an app, macOS asks if bb can control it.
+macOS Automation, so it needs no account link or API key. The first time the
+plugin controls an app, macOS asks if bb can control it.
+
+Streamed Apple Music tracks do not share their album art with other apps. To
+show it, the server asks Apple's public iTunes Search API for the cover. It
+sends only the artist and the track title. A setting turns this lookup off.
+Library tracks use their own art, with no lookup.
 
 The player works from any bb client, but it always controls the server's
 Mac.
@@ -25,5 +29,5 @@ Mac.
 - The plugin cannot search for music or start a playlist. Pick music in the
   app.
 - Spotify has no "repeat one" mode, so repeat turns on or off there.
-- Apple Music shows album art only for tracks in your library. A streamed
-  track shows a music note, because Music does not share its art.
+- When the iTunes Search API has no match by the same artist, a streamed
+  Apple Music track shows a music note.

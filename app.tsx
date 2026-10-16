@@ -256,17 +256,17 @@ function Notice({ children, action }: { children: ReactNode; action?: ReactNode 
 /** Spotify artwork is a URL. Music artwork loads once per track over RPC. */
 function useArtworkUrl(artwork: Track["artwork"]): string | null {
   const rpc = useRpc<typeof rpcContract>();
-  const key = artwork?.kind === "embedded" ? artwork.key : null;
-  const [embedded, setEmbedded] = useState<{ key: string; url: string | null } | null>(null);
+  const key = artwork?.kind === "music" ? artwork.key : null;
+  const [loaded, setLoaded] = useState<{ key: string; url: string | null } | null>(null);
   useEffect(() => {
     if (key === null) return;
     let cancelled = false;
     rpc.call("player_artwork", { key }).then(
-      ({ dataUrl }) => {
-        if (!cancelled) setEmbedded({ key, url: dataUrl });
+      ({ url }) => {
+        if (!cancelled) setLoaded({ key, url });
       },
       () => {
-        if (!cancelled) setEmbedded({ key, url: null });
+        if (!cancelled) setLoaded({ key, url: null });
       },
     );
     return () => {
@@ -275,7 +275,7 @@ function useArtworkUrl(artwork: Track["artwork"]): string | null {
   }, [rpc, key]);
   if (artwork === null) return null;
   if (artwork.kind === "url") return artwork.url;
-  return embedded?.key === artwork.key ? embedded.url : null;
+  return loaded?.key === artwork.key ? loaded.url : null;
 }
 
 function Artwork({ artwork }: { artwork: Track["artwork"] }) {

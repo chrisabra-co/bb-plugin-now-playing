@@ -27,12 +27,17 @@ const trackSchema = z.object({
   artist: z.string(),
   album: z.string(),
   durationSec: z.number().nonnegative(),
-  // Spotify gives a web URL. Music gives image bytes, which the panel
-  // loads once per track through player_artwork.
+  // Spotify gives a web URL. Music tracks load their art once per track
+  // through player_artwork: library tracks hold image bytes, and streamed
+  // tracks hold none, so the server looks those up.
   artwork: z
     .discriminatedUnion("kind", [
       z.object({ kind: z.literal("url"), url: z.string() }),
-      z.object({ kind: z.literal("embedded"), key: z.string() }),
+      z.object({
+        kind: z.literal("music"),
+        key: z.string(),
+        embedded: z.boolean(),
+      }),
     ])
     .nullable(),
 });
@@ -75,7 +80,7 @@ export const rpcContract = defineRpcContract({
   player_control: { input: controlSchema, output: playerSchema },
   player_artwork: {
     input: z.object({ key: z.string().regex(/^[0-9A-Fa-f]{1,32}$/) }),
-    output: z.object({ dataUrl: z.string().nullable() }),
+    output: z.object({ url: z.string().nullable() }),
   },
 });
 
@@ -147,11 +152,12 @@ function run(argv) {
       };
     } else {
       var pid = t.persistentID();
-      var art = null;
-      try { if (t.artworks.length > 0) art = { kind: "embedded", key: pid }; } catch (e) {}
+      var embedded = false;
+      try { embedded = t.artworks.length > 0; } catch (e) {}
       track = {
         id: pid, name: t.name(), artist: t.artist(), album: t.album(),
-        durationSec: t.duration() || 0, artwork: art
+        durationSec: t.duration() || 0,
+        artwork: { kind: "music", key: pid, embedded: embedded }
       };
     }
   } catch (e) {}
@@ -236,6 +242,57 @@ async function musicArtwork(key: string): Promise<string | null> {
   }
 }
 
+const itunesSchema = z.object({
+  results: z.array(
+    z.object({
+      artistName: z.string().optional(),
+      trackName: z.string().optional(),
+      collectionName: z.string().optional(),
+      artworkUrl100: z.string().optional(),
+    }),
+  ),
+});
+
+/**
+ * Finds a streamed track's cover with Apple's public iTunes Search API. It
+ * sends only the artist and title, and accepts only a result by the same
+ * artist, so a wrong guess shows the music note instead of another cover.
+ */
+async function lookupArtwork(track: Track): Promise<string | null> {
+  const normalize = (text = "") => text.trim().toLowerCase();
+  // Encode spaces as %20: the API returns no results for "+" in some terms.
+  const term = encodeURIComponent(`${track.artist} ${track.name}`);
+  const response = await fetch(
+    `https://itunes.apple.com/search?media=music&entity=song&limit=10&term=${term}`,
+    { signal: AbortSignal.timeout(8_000) },
+  );
+  if (!response.ok) return null;
+  const { results } = itunesSchema.parse(await response.json());
+  const byArtist = results.filter(
+    (result) =>
+      normalize(result.artistName) === normalize(track.artist) &&
+      result.artworkUrl100 !== undefined,
+  );
+  const best =
+    byArtist.find(
+      (result) =>
+        normalize(result.trackName) === normalize(track.name) &&
+        normalize(result.collectionName) === normalize(track.album),
+    ) ??
+    byArtist.find(
+      (result) => normalize(result.trackName) === normalize(track.name),
+    ) ??
+    byArtist.find(
+      (result) => normalize(result.collectionName) === normalize(track.album),
+    );
+  if (best?.artworkUrl100 === undefined) return null;
+  const url = new URL(best.artworkUrl100);
+  if (url.protocol !== "https:" || !url.hostname.endsWith(".mzstatic.com")) {
+    return null;
+  }
+  return url.href.replace(/\/100x100bb\./, "/300x300bb.");
+}
+
 function formatTime(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
@@ -282,11 +339,24 @@ export default async function plugin(bb: BbPluginApi) {
       },
       default: "auto",
     },
+    artworkLookup: {
+      type: "boolean",
+      label: "Find album art for streamed Apple Music tracks (sends the artist and title to Apple's iTunes Search)",
+      default: true,
+    },
   });
 
   // The app last seen playing or controlled. "auto" checks it first.
   let lastApp: MusicApp = "spotify";
   const artworkCache = new Map<string, string | null>();
+  // Recent Music tracks by persistent ID, so player_artwork accepts only a
+  // key the player reported and knows what to look up.
+  const musicTracks = new Map<string, Track>();
+  const remember = <V>(map: Map<string, V>, key: string, value: V) => {
+    map.delete(key);
+    if (map.size >= 20) map.delete(map.keys().next().value!);
+    map.set(key, value);
+  };
 
   async function player(action: "state" | Control): Promise<Player> {
     if (process.platform !== "darwin") return { status: "unsupported" };
@@ -310,6 +380,9 @@ export default async function plugin(bb: BbPluginApi) {
       ]),
     );
     const result = playerSchema.parse(raw);
+    if (result.status === "ready" && result.track?.artwork?.kind === "music") {
+      remember(musicTracks, result.track.artwork.key, result.track);
+    }
     if (
       result.status === "ready" &&
       (action !== "state" || result.state === "playing")
@@ -329,16 +402,24 @@ export default async function plugin(bb: BbPluginApi) {
     player_state: () => player("state"),
     player_control: (input) => control(input),
     player_artwork: async ({ key }) => {
-      if (process.platform !== "darwin") return { dataUrl: null };
-      if (!artworkCache.has(key)) {
-        const dataUrl = await musicArtwork(key);
-        // Keep the cache small; the panel needs only recent tracks.
-        if (artworkCache.size >= 20) {
-          artworkCache.delete(artworkCache.keys().next().value!);
-        }
-        artworkCache.set(key, dataUrl);
+      const track = musicTracks.get(key);
+      if (track === undefined || track.artwork?.kind !== "music") {
+        return { url: null };
       }
-      return { dataUrl: artworkCache.get(key) ?? null };
+      if (!artworkCache.has(key)) {
+        let url = track.artwork.embedded ? await musicArtwork(key) : null;
+        if (url === null && (await settings.get()).artworkLookup) {
+          try {
+            url = await lookupArtwork(track);
+          } catch (cause) {
+            // Do not cache a network failure; the next track change retries.
+            bb.log.warn(`Artwork lookup failed: ${String(cause)}`);
+            return { url: null };
+          }
+        }
+        remember(artworkCache, key, url);
+      }
+      return { url: artworkCache.get(key) ?? null };
     },
   });
 

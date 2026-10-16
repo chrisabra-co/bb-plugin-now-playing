@@ -6,8 +6,11 @@ sidebar footer.
 - `server.ts` — runs JavaScript for Automation (`osascript -l JavaScript`)
   against Spotify or Music. It exposes three RPC methods (`player_state`,
   `player_control`, `player_artwork`), the `app` setting, and the `bb music`
-  CLI command. Music artwork comes from AppleScript as raw bytes; the server
-  shrinks it with `sips` and sends it as a data URL.
+  CLI command. Music library artwork comes from AppleScript as raw bytes;
+  the server shrinks it with `sips` and sends it as a data URL. Streamed
+  Music tracks have no artwork in scripting, so the server looks up the cover
+  with the iTunes Search API (artist and title only). The `artworkLookup`
+  setting turns that off.
 - `app.tsx` — registers a sidebar-footer disclosure. The panel polls the
   player once a second while it is open and the page is visible.
 - `skills/now-playing/SKILL.md` — tells agents how to use `bb music`.
