@@ -1,7 +1,7 @@
 {
   "name": "bb-plugin-now-playing",
-  "version": "0.3.1",
-  "description": "Control Spotify or Apple Music on your Mac from a small player in the bb sidebar.",
+  "version": "0.4.0",
+  "description": "Control Spotify, Apple Music, or another music player on the bb server from a small player in the bb sidebar.",
   "license": "MIT",
   "author": "Chris Abra",
   "repository": {
@@ -28,7 +28,7 @@
   },
   "bb": {
     "name": "Now Playing",
-    "description": "Control Spotify or Apple Music on your Mac from a small player in the bb sidebar.",
+    "description": "Control Spotify, Apple Music, or another music player on the bb server from a small player in the bb sidebar.",
     "branding": {
       "icon": "./assets/music.svg",
       "experimental_icons": {

@@ -12,11 +12,11 @@ import {
   RepeatGlyph,
   ShuffleGlyph,
 } from "../glyphs";
-import { APP_NAMES, REPEAT_LABELS, Scrub, formatTime } from "../player";
+import { REPEAT_LABELS, Scrub, formatTime } from "../player";
 import type { StyleProps } from "./types";
 
 export function CoverStyle({ player, actions, artworkUrl }: StyleProps) {
-  const { app, track, state, positionSec, shuffling, repeat } = player;
+  const { appName, track, state, positionSec, shuffling, repeat } = player;
   const playing = state === "playing";
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [artworkUrl]);
@@ -60,7 +60,7 @@ export function CoverStyle({ player, actions, artworkUrl }: StyleProps) {
         <div className="absolute left-3.5 top-3.5 z-[3] flex items-center gap-1.5 rounded-full bg-black/55 px-2 py-1 backdrop-blur-sm">
           <Bars playing={playing} color="#ffffff" className="h-[10px]" />
           <span className="text-[10px] font-semibold uppercase leading-3 tracking-[0.08em]">
-            {APP_NAMES[app]}
+            {appName}
           </span>
         </div>
         <div className="relative z-[3] flex min-w-0 flex-col gap-0.5">
@@ -68,7 +68,7 @@ export function CoverStyle({ player, actions, artworkUrl }: StyleProps) {
             {track?.name ?? "Nothing playing"}
           </p>
           <p className="truncate text-[13px] leading-[18px] text-white/80">
-            {track === null ? `Pick something in ${APP_NAMES[app]}` : track.artist}
+            {track === null ? `Pick something in ${appName}` : track.artist}
           </p>
         </div>
       </div>

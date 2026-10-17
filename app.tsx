@@ -62,20 +62,23 @@ function NowPlayingPanel() {
   if (player === null) {
     body = error === null ? <Notice>Connecting…</Notice> : null;
   } else if (player.status === "unsupported") {
-    body = <Notice>Now Playing needs a bb server on macOS.</Notice>;
+    body = <Notice>{player.reason ?? "Now Playing needs a bb server on macOS, Linux, or Windows."}</Notice>;
   } else if (player.status === "not-installed") {
-    body = <Notice>{APP_NAMES[player.app]} is not installed on the bb server's Mac.</Notice>;
+    body = <Notice>{APP_NAMES[player.app]} is not installed on the bb server.</Notice>;
   } else if (player.status === "not-running") {
+    const { launchApp } = player;
     body = (
       <Notice
         action={
-          <Button size="sm" onClick={() => send({ action: "play" })}>
-            <PlayGlyph />
-            Open {APP_NAMES[player.launchApp]}
-          </Button>
+          launchApp === null ? undefined : (
+            <Button size="sm" onClick={() => send({ action: "play" })}>
+              <PlayGlyph />
+              Open {APP_NAMES[launchApp]}
+            </Button>
+          )
         }
       >
-        No music app is running.
+        {launchApp === null ? "Start a song in any music player on the bb server." : "No music app is running."}
       </Notice>
     );
   } else if (appearance === null) {

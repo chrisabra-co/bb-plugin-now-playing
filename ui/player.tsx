@@ -10,6 +10,7 @@ const POLL_MS = 1000;
 export const APP_NAMES: Record<MusicApp, string> = {
   spotify: "Spotify",
   music: "Apple Music",
+  other: "a music player",
 };
 
 export type ReadyPlayer = Extract<Player, { status: "ready" }>;
@@ -167,10 +168,10 @@ export const REPEAT_LABELS = {
   one: "Repeating one track",
 } as const;
 
-/** Spotify artwork is a URL. Music artwork loads once per track over RPC. */
+/** Web artwork is a URL. Other artwork loads once per track over RPC. */
 export function useArtworkUrl(artwork: Track["artwork"]): string | null {
   const rpc = useRpc<typeof rpcContract>();
-  const key = artwork?.kind === "music" ? artwork.key : null;
+  const key = artwork === null || artwork.kind === "url" ? null : artwork.key;
   const [loaded, setLoaded] = useState<{ key: string; url: string | null } | null>(null);
   useEffect(() => {
     if (key === null) return;

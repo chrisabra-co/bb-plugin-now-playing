@@ -15,7 +15,7 @@ import { hifiPalette } from "../theme";
 import type { StyleProps } from "./types";
 
 const SEGMENTS = 22;
-const APP_CODES = { spotify: "SP", music: "AM" } as const;
+const APP_CODES = { spotify: "SP", music: "AM", other: "MP" } as const;
 
 type Palette = ReturnType<typeof hifiPalette>;
 
@@ -245,7 +245,7 @@ export function HiFiStyle({ player, actions, theme, accent }: StyleProps) {
           <span style={dot(true)}>{APP_CODES[app]}</span>
           <span style={dot(shuffling)}>SHUF</span>
           <span style={dot(repeat !== "off")}>RPT·{repeat === "one" ? "ONE" : repeat === "all" ? "ALL" : "OFF"}</span>
-          <span style={{ color: lcd.mid }}>VOL {String(volume).padStart(2, "0")}</span>
+          <span style={{ color: lcd.mid }}>VOL {volume === null ? "--" : String(volume).padStart(2, "0")}</span>
         </div>
         <div className="np-doto flex items-end justify-between gap-2">
           <div className="flex min-w-0 flex-col gap-0.5">
@@ -326,12 +326,14 @@ export function HiFiStyle({ player, actions, theme, accent }: StyleProps) {
             <RepeatGlyph className="size-3" strokeWidth={2.2} />
           </Key>
         </div>
-        <Knob
-          volume={volume}
-          onInput={actions.volumeInput}
-          onCommit={actions.volumeCommit}
-          palette={palette}
-        />
+        {volume === null ? null : (
+          <Knob
+            volume={volume}
+            onInput={actions.volumeInput}
+            onCommit={actions.volumeCommit}
+            palette={palette}
+          />
+        )}
       </div>
     </div>
   );

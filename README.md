@@ -1,17 +1,25 @@
 # bb-plugin-now-playing
 
-A bb plugin that controls Spotify or Apple Music from a small panel in the
-sidebar footer.
+A bb plugin that controls the music player on the bb server from a small
+panel in the sidebar footer. It works on macOS, Linux, and Windows.
 
-- `server.ts` — runs JavaScript for Automation (`osascript -l JavaScript`)
-  against Spotify or Music. It exposes the player RPC methods
-  (`player_state`, `player_control`, `player_artwork`), the appearance
-  methods (`appearance_get`, `appearance_set`), the `app` setting, and the
-  `bb music` CLI command. Music library artwork comes from AppleScript as raw bytes;
-  the server shrinks it with `sips` and sends it as a data URL. Streamed
-  Music tracks have no artwork in scripting, so the server looks up the cover
-  with the iTunes Search API (artist and title only). The `artworkLookup`
-  setting turns that off.
+- `server.ts` — exposes the player RPC methods (`player_state`,
+  `player_control`, `player_artwork`), the appearance methods
+  (`appearance_get`, `appearance_set`), the `app` setting, and the
+  `bb music` CLI command. It picks a backend for the server's platform.
+- `backends/macos.ts` — runs JavaScript for Automation
+  (`osascript -l JavaScript`) against Spotify or Music. Music library artwork
+  comes from AppleScript as raw bytes; the server shrinks it with `sips` and
+  sends it as a data URL. Streamed Music tracks have no artwork in
+  scripting, so the server looks up the cover with the iTunes Search API
+  (artist and title only). The `artworkLookup` setting turns that off.
+- `backends/linux.ts` — controls any MPRIS player (Spotify, browsers, VLC,
+  and others) with `playerctl`.
+- `backends/windows.ts` — controls any app in the Windows media overlay
+  through the System Media Transport Controls. One PowerShell process runs
+  the WinRT calls and stops after 30 seconds with no request.
+- `player-schema.ts` — the player state and controls that each backend
+  returns.
 - `app.tsx` — registers a sidebar-footer disclosure and a "Player style"
   section on the plugin's settings page. The panel polls the player once a
   second while it is open and the page is visible.
@@ -36,10 +44,15 @@ bb plugin install git:https://github.com/chrisabra-co/bb-plugin-now-playing.git@
 
 ## Requirements
 
-- The bb server runs on macOS.
-- Spotify (desktop app) or Apple Music. Music ships with macOS.
-- bb has Automation permission for each app. macOS asks on the first call.
-  To change it later, open System Settings → Privacy & Security → Automation.
+- macOS: Spotify (desktop app) or Apple Music. bb needs Automation
+  permission for each app. macOS asks on the first call. To change it later,
+  open System Settings → Privacy & Security → Automation.
+- Linux: `playerctl` (for example `sudo apt install playerctl`). The bb
+  server must reach the desktop session's D-Bus. If
+  `DBUS_SESSION_BUS_ADDRESS` is not set, the server tries
+  `/run/user/<uid>/bus`.
+- Windows: Windows 10 1809 or later, with Windows PowerShell. Windows media
+  controls have no volume, so the panel hides the volume control.
 
 ## Develop
 

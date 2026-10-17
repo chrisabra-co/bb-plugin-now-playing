@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { APP_NAMES, Scrub, formatTime } from "../player";
+import { Scrub, formatTime } from "../player";
 import { lcdPalette } from "../theme";
 import type { StyleProps } from "./types";
 
@@ -48,7 +48,7 @@ function Toggle({ label, caption, on, onClick }: { label: string; caption: strin
 }
 
 export function BbampStyle({ player, actions, accent }: StyleProps) {
-  const { app, track, state, positionSec, volume, shuffling, repeat } = player;
+  const { appName, track, state, positionSec, volume, shuffling, repeat } = player;
   const playing = state === "playing";
   const lcd = lcdPalette(accent, "#000000");
   const [remaining, setRemaining] = useState(false);
@@ -58,7 +58,7 @@ export function BbampStyle({ player, actions, accent }: StyleProps) {
       : formatTime(positionSec);
   const title =
     track === null
-      ? `BB-AMP - ${APP_NAMES[app].toUpperCase()}`
+      ? `BB-AMP - ${appName.toUpperCase()}`
       : `1. ${track.artist} - ${track.name} (${formatTime(track.durationSec)})`.toUpperCase();
   const vars = { "--wa-lcd": lcd.hi, "--wa-lcd-dim": lcd.dim } as CSSProperties;
 
@@ -128,28 +128,35 @@ export function BbampStyle({ player, actions, accent }: StyleProps) {
           </div>
           <div className="np-silk flex h-2.5 items-center gap-[3px] text-[6px] leading-2">
             <span className="np-wa-lcd flex h-2.5 items-center px-[3px] text-[7px]" style={{ color: lcd.hi }}>
-              {app === "spotify" ? "SPOTIFY" : "MUSIC"}
+              {appName.toUpperCase()}
             </span>
             <span className="flex-1" />
             <span aria-hidden="true" className="text-[#4a4a5e]">MONO</span>
             <span aria-hidden="true" style={{ color: lcd.hi }}>STEREO</span>
           </div>
           <div className="flex h-3 items-center gap-[3px]">
-            <Scrub
-              label="Volume"
-              value={volume}
-              max={100}
-              onInput={actions.volumeInput}
-              onCommit={actions.volumeCommit}
-              className="flex h-3 min-w-0 flex-[54] items-center"
-            >
-              {(_shown, percent) => (
-                <>
-                  <span className="np-wa-volume h-1.5 w-full" style={{ "--wa-volume": `${percent}%` } as CSSProperties} />
-                  <span className="np-wa-thumb absolute top-px h-2.5 w-3" style={{ left: `calc((100% - 12px) * ${percent / 100})` }} />
-                </>
-              )}
-            </Scrub>
+            {volume === null ? (
+              // The player has no volume control: draw an empty groove.
+              <span aria-hidden="true" className="flex h-3 min-w-0 flex-[54] items-center">
+                <span className="np-wa-groove h-1.5 w-full bg-[#1f6a1f]" />
+              </span>
+            ) : (
+              <Scrub
+                label="Volume"
+                value={volume}
+                max={100}
+                onInput={actions.volumeInput}
+                onCommit={actions.volumeCommit}
+                className="flex h-3 min-w-0 flex-[54] items-center"
+              >
+                {(_shown, percent) => (
+                  <>
+                    <span className="np-wa-volume h-1.5 w-full" style={{ "--wa-volume": `${percent}%` } as CSSProperties} />
+                    <span className="np-wa-thumb absolute top-px h-2.5 w-3" style={{ left: `calc((100% - 12px) * ${percent / 100})` }} />
+                  </>
+                )}
+              </Scrub>
+            )}
             <span aria-hidden="true" className="relative flex h-3 min-w-0 flex-[28] items-center">
               <span className="np-wa-groove h-1.5 w-full bg-[#1f6a1f]" />
               <span className="np-wa-thumb absolute left-[calc(50%-6px)] top-px h-2.5 w-3" />

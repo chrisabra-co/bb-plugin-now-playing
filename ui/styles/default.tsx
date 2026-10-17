@@ -13,7 +13,7 @@ import {
   ShuffleGlyph,
   VolumeGlyph,
 } from "../glyphs";
-import { APP_NAMES, REPEAT_LABELS, Scrub, formatTime } from "../player";
+import { REPEAT_LABELS, Scrub, formatTime } from "../player";
 import type { StyleProps } from "./types";
 
 export function Artwork({ url, className }: { url: string | null; className?: string }) {
@@ -88,7 +88,7 @@ function ControlButton({
 }
 
 export function DefaultStyle({ player, actions, artworkUrl }: StyleProps) {
-  const { app, track, state, positionSec, volume, shuffling, repeat } = player;
+  const { appName, track, state, positionSec, volume, shuffling, repeat } = player;
   const playing = state === "playing";
   return (
     <div className="space-y-2.5">
@@ -99,9 +99,9 @@ export function DefaultStyle({ player, actions, artworkUrl }: StyleProps) {
             {track?.name ?? "Nothing playing"}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {track === null ? `Pick something in ${APP_NAMES[app]}` : track.artist}
+            {track === null ? `Pick something in ${appName}` : track.artist}
           </p>
-          <p className="truncate text-[10px] text-muted-foreground/70">{APP_NAMES[app]}</p>
+          <p className="truncate text-[10px] text-muted-foreground/70">{appName}</p>
         </div>
       </div>
 
@@ -153,16 +153,18 @@ export function DefaultStyle({ player, actions, artworkUrl }: StyleProps) {
         </ControlButton>
       </div>
 
-      <div className="flex items-center gap-2">
-        <VolumeGlyph muted={volume === 0} className="text-muted-foreground" />
-        <ThinSlider
-          label="Volume"
-          value={volume}
-          max={100}
-          onInput={actions.volumeInput}
-          onCommit={actions.volumeCommit}
-        />
-      </div>
+      {volume === null ? null : (
+        <div className="flex items-center gap-2">
+          <VolumeGlyph muted={volume === 0} className="text-muted-foreground" />
+          <ThinSlider
+            label="Volume"
+            value={volume}
+            max={100}
+            onInput={actions.volumeInput}
+            onCommit={actions.volumeCommit}
+          />
+        </div>
+      )}
     </div>
   );
 }

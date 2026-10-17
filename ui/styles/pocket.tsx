@@ -1,12 +1,12 @@
 // Pocket: one slim row. The play key and progress line use the accent.
 import { useEffect, useState } from "react";
 import { NextGlyph, NoteGlyph, PauseGlyph, PlayGlyph } from "../glyphs";
-import { APP_NAMES, Scrub } from "../player";
+import { Scrub } from "../player";
 import { pocketPalette } from "../theme";
 import type { StyleProps } from "./types";
 
 export function PocketStyle({ player, actions, theme, accent, artworkUrl }: StyleProps) {
-  const { app, track, state, positionSec } = player;
+  const { appName, track, state, positionSec } = player;
   const playing = state === "playing";
   const colors = pocketPalette(theme, accent);
   const [failed, setFailed] = useState(false);
@@ -31,7 +31,7 @@ export function PocketStyle({ player, actions, theme, accent, artworkUrl }: Styl
           {track?.name ?? "Nothing playing"}
         </p>
         <p className="truncate text-[11px] leading-[15px]" style={{ color: colors.muted }}>
-          {track === null ? APP_NAMES[app] : track.artist}
+          {track === null ? appName : track.artist}
         </p>
       </div>
       <button

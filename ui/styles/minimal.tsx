@@ -1,11 +1,11 @@
 // Minimal: the title, a hairline, and the time. Controls show on hover.
 import { Bars, NextGlyph, PauseGlyph, PlayGlyph, PreviousGlyph } from "../glyphs";
-import { APP_NAMES, Scrub, formatTime } from "../player";
+import { Scrub, formatTime } from "../player";
 import { mix, surfaces } from "../theme";
 import type { StyleProps } from "./types";
 
 export function MinimalStyle({ player, actions, theme }: StyleProps) {
-  const { app, track, state, positionSec } = player;
+  const { appName, track, state, positionSec } = player;
   const playing = state === "playing";
   const colors = surfaces(theme);
   const chip = mix(theme.ink, theme.canvas, theme.dark ? 0.1 : 0.08);
@@ -21,7 +21,7 @@ export function MinimalStyle({ player, actions, theme }: StyleProps) {
             {track?.name ?? "Nothing playing"}
           </p>
           <p className="truncate text-[12px] leading-4" style={{ color: colors.muted }}>
-            {track === null ? `Pick something in ${APP_NAMES[app]}` : track.artist}
+            {track === null ? `Pick something in ${appName}` : track.artist}
           </p>
         </div>
         {/* The time and the controls share one spot; CSS swaps them. */}

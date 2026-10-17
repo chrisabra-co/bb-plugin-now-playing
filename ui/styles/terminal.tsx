@@ -1,6 +1,6 @@
 // Terminal: the player as a shell session. It follows the theme's light or
 // dark mode, and its text uses the accent, checked for contrast.
-import { APP_NAMES, Scrub, formatTime } from "../player";
+import { Scrub, formatTime } from "../player";
 import { terminalPalette } from "../theme";
 import type { StyleProps } from "./types";
 
@@ -13,7 +13,7 @@ const cells = (percent: number, count: number, on: string, off: string) => {
 };
 
 export function TerminalStyle({ player, actions, theme, accent }: StyleProps) {
-  const { app, track, state, positionSec, volume, shuffling, repeat } = player;
+  const { appName, track, state, positionSec, volume, shuffling, repeat } = player;
   const playing = state === "playing";
   const colors = terminalPalette(theme, accent);
   const glow = colors.dark ? { textShadow: `0 0 6px ${colors.hi}73` } : undefined;
@@ -37,7 +37,7 @@ export function TerminalStyle({ player, actions, theme, accent }: StyleProps) {
         </p>
         <p className="truncate whitespace-pre lowercase" style={{ color: colors.mid }}>
           {"  "}
-          {track === null ? `open a song in ${APP_NAMES[app]}` : `${track.artist} · ${APP_NAMES[app]}`}
+          {track === null ? `open a song in ${appName}` : `${track.artist} · ${appName}`}
         </p>
       </div>
       {track === null ? null : (
@@ -81,17 +81,19 @@ export function TerminalStyle({ player, actions, theme, accent }: StyleProps) {
         >
           rpt:{repeat}
         </button>
-        <Scrub
-          label="Volume"
-          value={volume}
-          max={100}
-          onInput={actions.volumeInput}
-          onCommit={actions.volumeCommit}
-        >
-          {(_shown, percent) => (
-            <span className="whitespace-pre">vol:{cells(percent, VOLUME_CELLS, "|", ".")}</span>
-          )}
-        </Scrub>
+        {volume === null ? null : (
+          <Scrub
+            label="Volume"
+            value={volume}
+            max={100}
+            onInput={actions.volumeInput}
+            onCommit={actions.volumeCommit}
+          >
+            {(_shown, percent) => (
+              <span className="whitespace-pre">vol:{cells(percent, VOLUME_CELLS, "|", ".")}</span>
+            )}
+          </Scrub>
+        )}
       </div>
       <div className="flex gap-1.5 pt-0.5">
         <button

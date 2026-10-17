@@ -23,6 +23,8 @@
   "include": [
     "server.ts",
     "shared.ts",
+    "player-schema.ts",
+    "backends",
     "app.tsx",
     "ui",
     "components",

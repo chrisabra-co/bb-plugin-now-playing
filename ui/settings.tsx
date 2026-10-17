@@ -26,6 +26,8 @@ import type { Hex, Theme } from "./theme";
 const SAMPLE: ReadyPlayer = {
   status: "ready",
   app: "spotify",
+  appName: "Spotify",
+  source: "spotify",
   state: "playing",
   track: {
     id: "sample",
