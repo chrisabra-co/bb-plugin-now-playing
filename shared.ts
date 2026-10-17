@@ -8,12 +8,12 @@ export const STYLES = [
   "hifi",
   "terminal",
   "pocket",
-  "winamp",
+  "bbamp",
 ] as const;
 export type PlayerStyle = (typeof STYLES)[number];
 
 /** The styles with an accent the user can change. */
-export const ACCENT_STYLES = ["hifi", "terminal", "pocket", "winamp"] as const;
+export const ACCENT_STYLES = ["hifi", "terminal", "pocket", "bbamp"] as const;
 export type AccentStyle = (typeof ACCENT_STYLES)[number];
 
 export const hasAccent = (style: PlayerStyle): style is AccentStyle =>

@@ -96,6 +96,18 @@ const appearancePatchSchema = z.union([
 ]);
 export type AppearancePatch = z.infer<typeof appearancePatchSchema>;
 
+/** v0.3.0 called the bb-amp style "winamp"; read those values as "bbamp". */
+function renameWinamp(value: unknown): unknown {
+  if (typeof value !== "object" || value === null) return value;
+  const { style, accents } = value as { style?: unknown; accents?: unknown };
+  const next: Record<string, unknown> = { ...value, style: style === "winamp" ? "bbamp" : style };
+  if (typeof accents === "object" && accents !== null && "winamp" in accents) {
+    const { winamp, ...rest } = accents as Record<string, unknown>;
+    next.accents = { bbamp: winamp, ...rest };
+  }
+  return next;
+}
+
 export const rpcContract = defineRpcContract({
   player_state: { input: z.null(), output: playerSchema },
   player_control: { input: controlSchema, output: playerSchema },
@@ -426,7 +438,7 @@ export default async function plugin(bb: BbPluginApi) {
 
   async function getAppearance(): Promise<Appearance> {
     const stored = appearanceSchema.safeParse(
-      await bb.storage.kv.get(APPEARANCE_KEY),
+      renameWinamp(await bb.storage.kv.get(APPEARANCE_KEY)),
     );
     return stored.success ? stored.data : DEFAULT_APPEARANCE;
   }

@@ -7,7 +7,7 @@ import { MinimalStyle } from "./minimal";
 import { PocketStyle } from "./pocket";
 import { TerminalStyle } from "./terminal";
 import type { StyleProps } from "./types";
-import { WinampStyle } from "./winamp";
+import { BbampStyle } from "./bbamp";
 
 export type { StyleProps } from "./types";
 
@@ -25,5 +25,5 @@ export const STYLE_INFO: Record<PlayerStyle, StyleInfo> = {
   hifi: { label: "Hi-Fi", component: HiFiStyle, frameless: true },
   terminal: { label: "Terminal", component: TerminalStyle, frameless: true },
   pocket: { label: "Pocket", component: PocketStyle, frameless: true },
-  winamp: { label: "Winamp", component: WinampStyle, frameless: true },
+  bbamp: { label: "bb-amp", component: BbampStyle, frameless: true },
 };

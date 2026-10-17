@@ -29,7 +29,7 @@ app used last. Run `bb music app` to see the setting.
 | `bb music shuffle on\|off` | Turn shuffle on or off. |
 | `bb music repeat off\|all\|one` | Set repeat. Spotify treats `one` as `all`. |
 | `bb music app [auto\|spotify\|music]` | Show or set the app to control. |
-| `bb music style [name]` | Show or set the panel style: `default`, `minimal`, `cover`, `hifi`, `terminal`, `pocket`, or `winamp`. |
+| `bb music style [name]` | Show or set the panel style: `default`, `minimal`, `cover`, `hifi`, `terminal`, `pocket`, or `bbamp`. |
 
 Add `--json` to any command when the output drives code.
 

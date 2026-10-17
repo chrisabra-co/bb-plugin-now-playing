@@ -159,7 +159,7 @@ export const ACCENTS: Record<AccentStyle, AccentInfo> = {
   hifi: { fallback: "#ffb224", defaultLabel: "Amber" },
   terminal: { fallback: "theme", defaultLabel: "Theme" },
   pocket: { fallback: "theme", defaultLabel: "Theme" },
-  winamp: { fallback: "#00e400", defaultLabel: "Green" },
+  bbamp: { fallback: "#00e400", defaultLabel: "Green" },
 };
 
 export const PRESETS: Hex[] = [

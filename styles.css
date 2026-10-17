@@ -1,5 +1,5 @@
 /* Styles that Tailwind classes cannot express well: the pixel fonts, the
-   Winamp bevels, and the motion. Every class starts with "np-" so nothing
+   bb-amp bevels, and the motion. Every class starts with "np-" so nothing
    leaks into the rest of bb. */
 @import "./fonts.css";
 
@@ -7,7 +7,8 @@
    frame off, so this rule matches it; if bb changes its markup, the frame
    simply shows again. */
 section:has(> * > [data-bb-plugin="now-playing"] > .np-frameless) {
-  border-color: transparent;
+  /* bb sizes the frame to the panel and still counts its border. */
+  border-width: 0;
   background: transparent;
   border-radius: 0;
 }
@@ -45,7 +46,7 @@ section:has(> * > [data-bb-plugin="now-playing"] > .np-frameless) {
 
 .np-hifi-key:active { transform: translateY(1px); }
 
-/* Winamp 2.x base skin. */
+/* bb-amp: a skin after the MP3 players of around 2000. */
 .np-wa {
   border: 1px solid #000;
   background: linear-gradient(180deg, #34344a 0%, #26263a 55%, #1f1f30 100%);

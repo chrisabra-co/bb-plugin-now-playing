@@ -6,8 +6,8 @@ Control your music without leaving bb.
   with the track, album art, a seek bar, play and pause, previous and next,
   shuffle, repeat, and volume.
 - Seven player styles: Default, Minimal, Cover, Hi-Fi, Terminal, Pocket, and
-  a classic Winamp skin. Pick one on the plugin's settings page or with
-  `bb music style`. Hi-Fi, Terminal, Pocket, and Winamp take an accent color.
+  bb-amp, a skin in the style of the desktop MP3 players of around 2000. Pick one on the plugin's settings page or with
+  `bb music style`. Hi-Fi, Terminal, Pocket, and bb-amp take an accent color.
 - Styles that follow your bb theme. They take their colors from the active
   palette in light and dark mode. If an accent is hard to read on a theme,
   the player adjusts it.

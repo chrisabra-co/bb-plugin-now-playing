@@ -16,7 +16,7 @@ sidebar footer.
   section on the plugin's settings page. The panel polls the player once a
   second while it is open and the page is visible.
 - `ui/styles/` — the seven player styles: Default, Minimal, Cover, Hi-Fi,
-  Terminal, Pocket, and Winamp. The style and the accent colors are stored
+  Terminal, Pocket, and bb-amp. The style and the accent colors are stored
   in the plugin's key-value storage, so every bb window shows the same look.
 - `ui/theme.ts` — reads bb's canvas, ink, and primary colors and mixes the
   style colors from them, so each style fits light and dark themes. An

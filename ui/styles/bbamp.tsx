@@ -1,5 +1,5 @@
-// Winamp: the classic 2.x base skin. A skin keeps its own colors in every
-// theme; the accent sets the color of the screen text.
+// bb-amp: a skin after the desktop MP3 players of around 2000. A skin keeps
+// its own colors in every theme; the accent sets the color of the screen text.
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -47,7 +47,7 @@ function Toggle({ label, caption, on, onClick }: { label: string; caption: strin
   );
 }
 
-export function WinampStyle({ player, actions, accent }: StyleProps) {
+export function BbampStyle({ player, actions, accent }: StyleProps) {
   const { app, track, state, positionSec, volume, shuffling, repeat } = player;
   const playing = state === "playing";
   const lcd = lcdPalette(accent, "#000000");
@@ -58,7 +58,7 @@ export function WinampStyle({ player, actions, accent }: StyleProps) {
       : formatTime(positionSec);
   const title =
     track === null
-      ? `WINAMP 2.95 - ${APP_NAMES[app].toUpperCase()}`
+      ? `BB-AMP - ${APP_NAMES[app].toUpperCase()}`
       : `1. ${track.artist} - ${track.name} (${formatTime(track.durationSec)})`.toUpperCase();
   const vars = { "--wa-lcd": lcd.hi, "--wa-lcd-dim": lcd.dim } as CSSProperties;
 
@@ -67,7 +67,7 @@ export function WinampStyle({ player, actions, accent }: StyleProps) {
       <div aria-hidden="true" className="flex h-3 items-center gap-[5px]">
         <span className="np-wa-chip size-2 shrink-0" />
         <span className="np-wa-stripes h-[7px] flex-1" />
-        <span className="np-silk text-[8px] leading-[10px] tracking-[0.12em] text-[#e6e6f2]">WINAMP</span>
+        <span className="np-silk text-[8px] leading-[10px] tracking-[0.12em] text-[#e6e6f2]">BB-AMP</span>
         <span className="np-wa-stripes h-[7px] flex-1" />
         <span className="flex shrink-0 gap-[2px]">
           <span className="np-wa-tiny size-2" />
@@ -217,8 +217,10 @@ export function WinampStyle({ player, actions, accent }: StyleProps) {
           onClick={actions.cycleRepeat}
         />
         <span className="flex-1" />
-        <svg aria-hidden="true" width="10" height="14" viewBox="0 0 10 14" className="shrink-0">
-          <path d="M6 0L0 8H4L3 14L10 5H6L7 0Z" fill="#d9bc62" />
+        <svg aria-hidden="true" width="12" height="14" viewBox="0 0 12 14" className="shrink-0">
+          <path d="M4 2V11M4 2L11 0V9" fill="none" stroke="#d9bc62" strokeWidth="2" />
+          <rect x="0" y="9" width="5" height="5" fill="#d9bc62" />
+          <rect x="7" y="7" width="5" height="5" fill="#d9bc62" />
         </svg>
       </div>
     </div>
