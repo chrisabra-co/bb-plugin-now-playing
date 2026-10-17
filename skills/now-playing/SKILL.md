@@ -1,6 +1,6 @@
 ---
 name: now-playing
-description: Control Spotify or Apple Music on the bb server's Mac with the `bb music` CLI. Use when the user asks to play, pause, skip, change the volume, toggle shuffle or repeat, switch between Spotify and Apple Music, or asks what is playing.
+description: Control Spotify or Apple Music on the bb server's Mac with the `bb music` CLI. Use when the user asks to play, pause, skip, change the volume, toggle shuffle or repeat, switch between Spotify and Apple Music, change the player style, or asks what is playing.
 ---
 
 # Now Playing
@@ -29,13 +29,14 @@ app used last. Run `bb music app` to see the setting.
 | `bb music shuffle on\|off` | Turn shuffle on or off. |
 | `bb music repeat off\|all\|one` | Set repeat. Spotify treats `one` as `all`. |
 | `bb music app [auto\|spotify\|music]` | Show or set the app to control. |
+| `bb music style [name]` | Show or set the panel style: `default`, `minimal`, `cover`, `hifi`, `terminal`, `pocket`, or `winamp`. |
 
 Add `--json` to any command when the output drives code.
 
 ## Rules
 
 - Change playback only when the user asks for it. Music plays out loud.
-- Change the `app` setting only when the user asks for it.
+- Change the `app` setting or the style only when the user asks for it.
 - Run `bb music status` to answer "what is playing". Do not guess.
 - The panel finds art for streamed Apple Music tracks with Apple's iTunes
   Search API. A music note means no match. That is not an error.

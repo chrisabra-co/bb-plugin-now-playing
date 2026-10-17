@@ -1,0 +1,125 @@
+/* Styles that Tailwind classes cannot express well: the pixel fonts, the
+   Winamp bevels, and the motion. Every class starts with "np-" so nothing
+   leaks into the rest of bb. */
+@import "./fonts.css";
+
+/* A style with its own case replaces bb's disclosure frame. No API turns the
+   frame off, so this rule matches it; if bb changes its markup, the frame
+   simply shows again. */
+section:has(> * > [data-bb-plugin="now-playing"] > .np-frameless) {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+}
+.np-frameless > [role="alert"] { padding: 0 4px 4px; }
+
+.np-silk { font-family: "NP Silkscreen", ui-monospace, monospace; }
+.np-vt { font-family: "NP VT323", ui-monospace, monospace; }
+.np-doto { font-family: "NP Doto", ui-monospace, monospace; }
+.np-mono { font-family: ui-monospace, Menlo, "SF Mono", monospace; }
+
+/* Small bars beside the time: they move while music plays. */
+.np-bars-on > span { animation: np-bar 900ms ease-in-out infinite alternate; transform-origin: bottom; }
+.np-bars-on > span:nth-child(2) { animation-duration: 700ms; }
+.np-bars-on > span:nth-child(3) { animation-duration: 1100ms; }
+@keyframes np-bar { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+
+/* Minimal: the time shows at rest; the controls show on hover or focus,
+   and always on touch screens. Hidden controls stay in the tab order, so
+   keyboard focus reveals them. */
+.np-min .np-min-rest,
+.np-min .np-min-controls,
+.np-min .np-min-dot { transition: opacity 120ms; }
+.np-min .np-min-controls { opacity: 0; pointer-events: none; }
+.np-min .np-min-dot { opacity: 0; }
+.np-min:hover .np-min-rest,
+.np-min:focus-within .np-min-rest { opacity: 0; }
+.np-min:hover .np-min-controls,
+.np-min:focus-within .np-min-controls { opacity: 1; pointer-events: auto; }
+.np-min:hover .np-min-dot,
+.np-min:focus-within .np-min-dot { opacity: 1; }
+@media (hover: none) {
+  .np-min .np-min-rest { opacity: 0; }
+  .np-min .np-min-controls { opacity: 1; pointer-events: auto; }
+}
+
+.np-hifi-key:active { transform: translateY(1px); }
+
+/* Winamp 2.x base skin. */
+.np-wa {
+  border: 1px solid #000;
+  background: linear-gradient(180deg, #34344a 0%, #26263a 55%, #1f1f30 100%);
+  box-shadow: inset 1px 1px 0 #6a6a8e, inset -1px -1px 0 #0a0a12;
+  color: #d6d6e6;
+}
+.np-wa-stripes {
+  background: repeating-linear-gradient(180deg, #d9bc62 0 1px, transparent 1px 3px);
+}
+.np-wa-chip {
+  background: #c9ac58;
+  box-shadow: inset 1px 1px 0 #f2dc8e, inset -1px -1px 0 #6e5a20;
+}
+.np-wa-tiny {
+  background: #8d8da2;
+  box-shadow: inset 1px 1px 0 #d4d4e2, inset -1px -1px 0 #3a3a4a;
+}
+.np-wa-lcd {
+  background: #000;
+  box-shadow: inset 1px 1px 0 #0b0b12, inset -1px -1px 0 #5a5a7a;
+}
+.np-wa-groove { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5a5a7a; }
+.np-wa-volume {
+  background: linear-gradient(90deg, #1a6e1a 0%, #2fae1f 50%, #d6c81c 80%, #b8401c 100%);
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a8e;
+  /* Dim the part of the track above the volume. */
+  mask-image: linear-gradient(90deg, #000 var(--wa-volume), #0008 var(--wa-volume));
+}
+.np-wa-thumb {
+  pointer-events: none;
+  background: linear-gradient(180deg, #d4d4e0, #9a9aae);
+  box-shadow: inset 1px 1px 0 #f4f4fa, inset -1px -1px 0 #4a4a5a;
+}
+.np-wa-small {
+  background: #3a3a52;
+  box-shadow: inset 1px 1px 0 #6a6a8e, inset -1px -1px 0 #0a0a12;
+}
+.np-wa-key {
+  color: #16161f;
+  background: linear-gradient(180deg, #cdcdd8, #9d9db0);
+  box-shadow: inset 1px 1px 0 #f4f4fa, inset -1px -1px 0 #45455a;
+}
+.np-wa-key:active,
+.np-wa-key-down {
+  background: linear-gradient(180deg, #a6a6b8, #c4c4d0);
+  box-shadow: inset 1px 1px 0 #45455a, inset -1px -1px 0 #f4f4fa;
+}
+.np-wa-toggle { border: 1px solid #05050a; }
+.np-wa-led {
+  width: 3px;
+  height: 6px;
+  background: #1f3a1f;
+  box-shadow: inset 0 0 0 1px #16161f;
+}
+.np-wa-led-on { background: var(--wa-lcd); }
+.np-wa-bar {
+  background: linear-gradient(0deg, #1fa81f 0, #1fa81f 6px, #d6c81c 10px, #e0461c 15px);
+  background-size: 3px 15px;
+  background-position: bottom;
+  transform-origin: bottom;
+}
+.np-wa-spectrum-on .np-wa-bar { animation: np-spectrum 520ms ease-in-out infinite alternate; }
+.np-wa-spectrum-on .np-wa-bar:nth-child(3n) { animation-duration: 380ms; }
+.np-wa-spectrum-on .np-wa-bar:nth-child(3n + 1) { animation-duration: 640ms; }
+@keyframes np-spectrum {
+  0% { transform: scaleY(0.25); }
+  60% { transform: scaleY(1); }
+  100% { transform: scaleY(0.55); }
+}
+.np-wa-marquee-on { animation: np-marquee linear infinite; }
+@keyframes np-marquee { to { transform: translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .np-bars-on > span,
+  .np-wa-spectrum-on .np-wa-bar,
+  .np-wa-marquee-on { animation: none; }
+}

@@ -1,6 +1,6 @@
 {
   "name": "bb-plugin-now-playing",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Control Spotify or Apple Music on your Mac from a small player in the bb sidebar.",
   "license": "MIT",
   "author": "Chris Abra",
@@ -19,7 +19,8 @@
   "type": "module",
   "scripts": {
     "build": "bb plugin build",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "fonts": "node scripts/embed-fonts.mjs"
   },
   "engines": {
     "bb": ">=0.46",

@@ -22,7 +22,9 @@
   },
   "include": [
     "server.ts",
+    "shared.ts",
     "app.tsx",
+    "ui",
     "components",
     "lib",
     "hooks"

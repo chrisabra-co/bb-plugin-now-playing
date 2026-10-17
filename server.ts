@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
 import { z } from "zod";
+import { ACCENT_STYLES, STYLES } from "./shared";
 
 const appSchema = z.enum(["spotify", "music"]);
 export type MusicApp = z.infer<typeof appSchema>;
@@ -75,6 +76,26 @@ const controlSchema = z.discriminatedUnion("action", [
 ]);
 export type Control = z.infer<typeof controlSchema>;
 
+const styleSchema = z.enum(STYLES);
+const accentStyleSchema = z.enum(ACCENT_STYLES);
+const hexSchema = z.string().regex(/^#[0-9a-f]{6}$/);
+
+// The style is the same in every bb window. A style with no stored accent
+// uses its default (see ui/theme.ts).
+const appearanceSchema = z.object({
+  style: styleSchema,
+  accents: z.partialRecord(accentStyleSchema, hexSchema),
+});
+export type Appearance = z.infer<typeof appearanceSchema>;
+const DEFAULT_APPEARANCE: Appearance = { style: "default", accents: {} };
+
+const appearancePatchSchema = z.union([
+  z.object({ style: styleSchema }),
+  // A null color goes back to the style's default.
+  z.object({ accent: accentStyleSchema, color: hexSchema.nullable() }),
+]);
+export type AppearancePatch = z.infer<typeof appearancePatchSchema>;
+
 export const rpcContract = defineRpcContract({
   player_state: { input: z.null(), output: playerSchema },
   player_control: { input: controlSchema, output: playerSchema },
@@ -82,10 +103,15 @@ export const rpcContract = defineRpcContract({
     input: z.object({ key: z.string().regex(/^[0-9A-Fa-f]{1,32}$/) }),
     output: z.object({ url: z.string().nullable() }),
   },
+  appearance_get: { input: z.null(), output: appearanceSchema },
+  appearance_set: { input: appearancePatchSchema, output: appearanceSchema },
 });
 
 /** Realtime channel app.tsx listens on after any control action. */
 const PLAYER_CHANGED = "player-changed";
+/** Realtime channel for a new style or accent. */
+const APPEARANCE_CHANGED = "appearance-changed";
+const APPEARANCE_KEY = "appearance";
 
 // One JXA program serves every call: argv is [preference, hint, action,
 // value]. "auto" picks the app that plays, then the running app, with the
@@ -398,6 +424,38 @@ export default async function plugin(bb: BbPluginApi) {
     return result;
   }
 
+  async function getAppearance(): Promise<Appearance> {
+    const stored = appearanceSchema.safeParse(
+      await bb.storage.kv.get(APPEARANCE_KEY),
+    );
+    return stored.success ? stored.data : DEFAULT_APPEARANCE;
+  }
+
+  // Writes run one at a time, so two windows (or a window and the CLI)
+  // cannot overwrite each other's change.
+  let appearanceWrites: Promise<unknown> = Promise.resolve();
+  function setAppearance(patch: AppearancePatch): Promise<Appearance> {
+    const write = appearanceWrites.then(() => writeAppearance(patch));
+    appearanceWrites = write.catch(() => {});
+    return write;
+  }
+
+  async function writeAppearance(patch: AppearancePatch): Promise<Appearance> {
+    const current = await getAppearance();
+    let next: Appearance;
+    if ("style" in patch) {
+      next = { ...current, style: patch.style };
+    } else {
+      const accents = { ...current.accents };
+      if (patch.color === null) delete accents[patch.accent];
+      else accents[patch.accent] = patch.color;
+      next = { ...current, accents };
+    }
+    await bb.storage.kv.set(APPEARANCE_KEY, next);
+    bb.realtime.publish(APPEARANCE_CHANGED, null);
+    return next;
+  }
+
   bb.rpc.register(rpcContract, {
     player_state: () => player("state"),
     player_control: (input) => control(input),
@@ -421,6 +479,8 @@ export default async function plugin(bb: BbPluginApi) {
       }
       return { url: artworkCache.get(key) ?? null };
     },
+    appearance_get: () => getAppearance(),
+    appearance_set: (patch) => setAppearance(patch),
   });
 
   const usage = [
@@ -431,6 +491,7 @@ export default async function plugin(bb: BbPluginApi) {
     "  bb music shuffle on|off [--json]",
     "  bb music repeat off|all|one [--json]",
     "  bb music app [auto|spotify|music]",
+    `  bb music style [${STYLES.join("|")}]`,
   ].join("\n");
   bb.cli.register({
     name: "music",
@@ -470,6 +531,11 @@ export default async function plugin(bb: BbPluginApi) {
         summary: "Show or set which app to control",
         usage: "bb music app [auto|spotify|music]",
       },
+      {
+        name: "style",
+        summary: "Show or set the look of the sidebar player",
+        usage: `bb music style [${STYLES.join("|")}]`,
+      },
     ],
     async run(argv) {
       const json = argv.includes("--json");
@@ -492,6 +558,17 @@ export default async function plugin(bb: BbPluginApi) {
           }
           await settings.experimental_set({ app: next });
           return { exitCode: 0, stdout: `Controlling: ${next}` };
+        }
+        case "style": {
+          if (args[0] === undefined) {
+            return { exitCode: 0, stdout: (await getAppearance()).style };
+          }
+          const style = styleSchema.safeParse(args[0]);
+          if (!style.success) {
+            return fail(`Style must be one of: ${STYLES.join(", ")}.`);
+          }
+          await setAppearance({ style: style.data });
+          return { exitCode: 0, stdout: `Style: ${style.data}` };
         }
         case "status":
           action = "state";
