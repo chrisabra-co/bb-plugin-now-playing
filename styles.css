@@ -32,6 +32,9 @@ section:has(> * > [data-bb-plugin="now-playing"] > .np-frameless) {
 .np-min .np-min-controls,
 .np-min .np-min-dot { transition: opacity 120ms; }
 .np-min .np-min-controls { opacity: 0; pointer-events: none; }
+/* The time sits in the same spot as the controls. Below opacity 1 it paints
+   above them, so it must never take a click. */
+.np-min .np-min-rest { pointer-events: none; }
 .np-min .np-min-dot { opacity: 0; }
 .np-min:hover .np-min-rest,
 .np-min:focus-within .np-min-rest { opacity: 0; }

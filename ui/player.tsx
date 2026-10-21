@@ -24,6 +24,9 @@ export function usePlayer(intervalMs = POLL_MS) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef(false);
+  // Counts controls sent. A reply that started before a newer control holds
+  // the old state, so it must not overwrite the newer one.
+  const controls = useRef(0);
 
   const apply = useCallback((next: Player) => {
     setPlayer(next);
@@ -36,9 +39,12 @@ export function usePlayer(intervalMs = POLL_MS) {
   const refresh = useCallback(() => {
     if (inFlight.current || document.visibilityState !== "visible") return;
     inFlight.current = true;
+    const seen = controls.current;
     rpc
       .call("player_state")
-      .then(apply, report)
+      .then((next) => {
+        if (seen === controls.current) apply(next);
+      }, report)
       .finally(() => {
         inFlight.current = false;
       });
@@ -57,7 +63,10 @@ export function usePlayer(intervalMs = POLL_MS) {
 
   const send = useCallback(
     (control: Control) => {
-      rpc.call("player_control", control).then(apply, report);
+      const sent = ++controls.current;
+      rpc.call("player_control", control).then((next) => {
+        if (sent === controls.current) apply(next);
+      }, report);
     },
     [rpc, apply, report],
   );
